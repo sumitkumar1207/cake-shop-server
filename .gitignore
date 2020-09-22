@@ -1,0 +1,41 @@
+node_modules
+/node_modules
+app/config/
+/app/config/
+
+#private assets
+/app/public/assets/icons
+/app/public/assets/doctor
+
+# exclude everything
+/app/private/excel/*
+
+# exception to the rule
+!app/private/excel/.gitkeep 
+
+.DS_Store
+node_modules
+package-lock.json
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+
+#some dist files
+calculate_distance.js
+query.sql
+filezilla_setting.txt
