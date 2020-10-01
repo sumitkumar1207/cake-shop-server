@@ -1,4 +1,5 @@
 let UserRoutes = require("@/routes/UserRoutes");
+let CakeRoutes = require("@/routes/CakeRoutes");
 let RoleRoutes = require("@/routes/RoleRoutes")
 let TestController = require("@/controller/test")
 
@@ -12,4 +13,6 @@ module.exports = (app) => {
 
   //App Level APIS
   app.use("/app/user", UserRoutes)
+  //Cake routes for app
+  app.use("/app/cake", CakeRoutes)
 };
