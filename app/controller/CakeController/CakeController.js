@@ -62,7 +62,7 @@ module.exports.AddCake = function (req, res) {
   }
 }
 
-//@route    POST 5500/app/cake/get-cakes
+//@route    GET 5500/app/cake/get-cakes
 //@desc     Get all Cakes
 //@access   Private
 module.exports.GetCakes = async function (req, res) {
@@ -128,7 +128,7 @@ module.exports.GetCakes = async function (req, res) {
   }
 }
 
-//@route    POST 5500/app/cake/get-cake/:cake_id
+//@route    GET 5500/app/cake/get-cake/:cake_id
 //@desc     Get Cake with the help of cake id.
 //@access   Private
 module.exports.GetCakeByCakeId = async function (req, res) {
@@ -173,7 +173,70 @@ module.exports.GetCakeByCakeId = async function (req, res) {
   }
 }
 
-//@route    POST 5500/app/cake/delete-cake/:cake_id
+//@route    PUT 5500/app/cake/get-cake/:cake_id
+//@desc     Get Cake with the help of cake id.
+//@access   Private
+module.exports.UpdateCake = async function (req, res) {
+  //Check for JWT token if expires then show expiry msg
+  if (req.user_info.status == false) {
+    //Error message to app
+    return res.status(403).json({ status: req.user_info.status, message: req.user_info.message, error: req.user_info.message, Records: [] });
+  } else {
+    let { cake_id } = req.params;
+    let { cake_name, cake_description, cake_price } = req.body;
+    //Remove white spaces and replace with single space
+    cake_name = cake_name.replace(/  +/g, ' ');
+    cake_description = cake_description.replace(/  +/g, ' ');
+
+    //Check for valid cake id
+    if (cake_id && parseInt(cake_id) > 0) {
+      let find_query = `
+      SELECT 
+      ck.cake_id,
+      ck.cake_name,
+      ck.cake_description,
+      ck.cake_image,
+      ck.cake_created_at,
+      ck.cake_modified_at,
+      ck.cake_is_active,
+      CONCAT('${req.app.config.host_name}',ck.cake_image ) AS cake_url,
+      DATE_FORMAT(ck.cake_created_at,'%d/%m/%Y') AS createdAt,
+      TIME_FORMAT(ck.cake_created_at,'%h:%i %p') AS createdTime
+      FROM cake ck
+      WHERE ck.cake_id='${cake_id}' AND ck.cake_is_active='Y'`
+
+      //Query to DB
+      sql.query(find_query, (err, cake) => {
+        if (err) {
+          return res.status(200).json({ status: false, message: "SQL error while finding records", error: err, Records: [] });
+        } else if (cake && cake.length > 0) {
+
+          let update_payload = {
+            cake_name: cake_name.trim().length > 0 ? cake_name : cake[0]["cake_name"],
+            cake_description: cake_description.trim().length > 0 ? cake_description : cake[0]["cake_description"],
+            cake_price: cake_price || cake[0]["cake_price"],
+            cake_modified_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+            cake_modified_by: req["user_info"]["user_id"]
+          }
+          let update_query = `UPDATE cake SET ? WHERE cake_id='${cake_id}' AND cake_is_active='Y'`;
+          sql.query(update_query, update_payload, (upd_err, updated) => {
+            if (upd_err) {
+              return res.status(200).json({ status: false, message: `SQL update error`, Records: [], error: upd_err });
+            } else {
+              return res.status(200).json({ status: true, message: `Cake info updated!`, Records: [], error: null });
+            }
+          })
+        } else {
+          return res.status(200).json({ status: true, message: `No cake found!`, Records: cake, error: null });
+        }
+      })
+    } else {
+      return res.status(200).json({ status: false, message: `Invalid cake id!`, Records: [], error: true });
+    }
+  }
+}
+
+//@route    DELETE 5500/app/cake/delete-cake/:cake_id
 //@desc     Delete Cake with the help of cake id.
 //@access   Private
 module.exports.DeleteCakeByCakeId = async function (req, res) {
