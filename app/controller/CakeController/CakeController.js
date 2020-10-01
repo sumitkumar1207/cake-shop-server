@@ -1,3 +1,4 @@
+let moment = require('moment');
 const { validationResult } = require('express-validator');
 const { ErrorHandler } = require('@/helpers/error')
 let sql = require('@/app/db/database')
@@ -162,6 +163,51 @@ module.exports.GetCakeByCakeId = async function (req, res) {
           return res.status(200).json({
             status: true, message: `Get cake successfully!`, Records: cake, error: null
           });
+        } else {
+          return res.status(200).json({ status: true, message: `No cake found!`, Records: cake, error: null });
+        }
+      })
+    } else {
+      return res.status(200).json({ status: false, message: `Invalid cake id!`, Records: [], error: true });
+    }
+  }
+}
+
+//@route    POST 5500/app/cake/delete-cake/:cake_id
+//@desc     Delete Cake with the help of cake id.
+//@access   Private
+module.exports.DeleteCakeByCakeId = async function (req, res) {
+  //Check for JWT token if expires then show expiry msg
+  if (req.user_info.status == false) {
+    //Error message to app
+    return res.status(403).json({ status: req.user_info.status, message: req.user_info.message, error: req.user_info.message, Records: [] });
+  } else {
+    let { cake_id } = req.params;
+    //Check for valid cake id
+    if (cake_id && parseInt(cake_id) > 0) {
+      let find_query = `
+      SELECT ck.cake_id
+      FROM cake ck
+      WHERE ck.cake_id='${cake_id}' AND ck.cake_is_active='Y'`
+
+      //Query to DB
+      sql.query(find_query, (err, cake) => {
+        if (err) {
+          return res.status(200).json({ status: false, message: "SQL error while finding records", error: err, Records: [] });
+        } else if (cake && cake.length > 0) {
+          //Flag the cake to "N"
+          let cake_modified_at = moment().format('YYYY-MM-DD HH:mm:ss')
+          let cake_modified_by = req['user_info']['user_id']
+          let cake_is_active = "N"
+
+          let delete_query = `UPDATE cake SET cake_is_active='${cake_is_active}',cake_modified_by='${cake_modified_by}',cake_modified_at='${cake_modified_at}' WHERE  cake_id='${cake_id}' AND cake_is_active= 'Y' `;
+          sql.query(delete_query, (error) => {
+            if (error) {
+              return res.status(400).json({ status: false, message: 'None found', error: error, Records: [] })
+            } else {
+              return res.status(200).json({ status: true, message: `Requested cake removed successfully!`, error: null, Records: [] });
+            }
+          })
         } else {
           return res.status(200).json({ status: true, message: `No cake found!`, Records: cake, error: null });
         }
