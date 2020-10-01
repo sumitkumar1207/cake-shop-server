@@ -7,6 +7,9 @@ const roles = require('@/app/helpers/permission');
 //Add new cake route
 router.route('/add-cake')
   .post(isAuthorizedUser([roles.admin, roles.super_admin]), CakeConteroller.AddCake)
+//Update the cake info
+router.route('/edit-cake/:cake_id')
+  .put(isAuthorizedUser(), CakeConteroller.UpdateCake)
 //Get all the cakes
 router.route('/get-cakes')
   .get(isAuthorizedUser(), CakeConteroller.GetCakes)
