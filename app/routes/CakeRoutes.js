@@ -13,5 +13,8 @@ router.route('/get-cakes')
 //Get the cake detail from cake id
 router.route('/get-cake/:cake_id')
   .get(isAuthorizedUser(), CakeConteroller.GetCakeByCakeId)
+//Flag the cake
+router.route('/delete-cake/:cake_id')
+  .delete(isAuthorizedUser(), CakeConteroller.DeleteCakeByCakeId)
 
 module.exports = router
