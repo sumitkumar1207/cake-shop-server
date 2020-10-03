@@ -1,4 +1,5 @@
 let moment = require('moment');
+let async = require('async');
 const { validationResult } = require('express-validator');
 const { ErrorHandler } = require('@/helpers/error')
 let sql = require('@/app/db/database')
@@ -20,41 +21,58 @@ module.exports.AddUnit = function (req, res) {
       return res.status(200).json({ status: false, message: message[0].msg, errors: errors.array(), Records: [] });
     } else {
       //Pull all the keys from body
-      let { unit_name, unit_value } = req.body;
-      //Remove white spaces and replace with single space
-      unit_name = unit_name.replace(/  +/g, ' ');
+      let { units } = req.body;
+      if (units && units.length > 0) {
+        async.each(units, function (unit, cb) {
+          //Remove white spaces and replace with single space
+          unit["unit_name"] = unit["unit_name"].replace(/  +/g, ' ');
+          unit["unit_name"] = unit["unit_name"].toLowerCase();
 
-      let unit_payload = {
-        unit_name,
-        unit_value,
-        unit_created_by: req["user_info"]["user_id"] || 0,
-        unit_created_date: new Date(),
-        unit_modified_by: req["user_info"]["user_id"] || 0,
-        unit_modified_date: new Date(),
-        unit_is_active: "Y"
-      }
-      /**
-       * Search for same unit name.
-      */
-      let is_unit_exists = `SELECT unit_name,unit_value FROM unit WHERE unit_name='${unit_payload["unit_name"]}' AND unit_value='${unit_payload["unit_value"]}' AND unit_is_active='Y'`;
-      sql.query(is_unit_exists, (find_err, unit_exists) => {
-        if (find_err) {
-          return res.status(200).json({ status: false, message: "SQL find error", Records: [], error: find_err })
-        } else if (unit_exists && unit_exists.length > 0) {
-          //Same unit name found
-          return res.status(200).json({ status: true, message: "unit name already exists!", Records: [], error: null })
-        } else {
-          //Save the new unit
-          let insert_unit = `INSERT INTO unit SET ?`;
-          sql.query(insert_unit, unit_payload, (insert_err, new_unit) => {
-            if (insert_err) {
-              return res.status(200).json({ status: false, message: "SQL insert error", Records: [], error: insert_err })
+          let unit_payload = {
+            unit_name: unit["unit_name"],
+            unit_value: unit["unit_value"],
+            unit_created_by: req["user_info"]["user_id"] || 0,
+            unit_created_date: new Date(),
+            unit_modified_by: req["user_info"]["user_id"] || 0,
+            unit_modified_date: new Date(),
+            unit_is_active: "Y"
+          }
+          /**
+           * Search for same unit name.
+          */
+          let is_unit_exists = `SELECT unit_name,unit_value FROM unit WHERE unit_name='${unit_payload["unit_name"]}' AND unit_value='${unit_payload["unit_value"]}' AND unit_is_active='Y'`;
+          sql.query(is_unit_exists, (find_err, unit_exists) => {
+            if (find_err) {
+              cb()
+              // return res.status(200).json({ status: false, message: "SQL find error", Records: [], error: find_err })
+            } else if (unit_exists && unit_exists.length > 0) {
+              //Same unit name found
+              cb()
+              // return res.status(200).json({ status: true, message: "unit name already exists!", Records: [], error: null })
             } else {
-              return res.status(200).json({ status: true, message: "New unit added!", Records: [], error: null })
+              //Save the new unit
+              let insert_unit = `INSERT INTO unit SET ?`;
+              sql.query(insert_unit, unit_payload, (insert_err, new_unit) => {
+                if (insert_err) {
+                  cb()
+                  // return res.status(200).json({ status: false, message: "SQL insert error", Records: [], error: insert_err })
+                } else {
+                  cb()
+                  // return res.status(200).json({ status: true, message: "New unit added!", Records: [], error: null })
+                }
+              })
             }
-          })
-        }
-      });
+          });
+        }, function (mainErr) {
+          if (!mainErr) {
+            return res.status(200).json({ status: true, message: "New unit added!", Records: [], error: null })
+          } else {
+            return res.status(200).json({ status: false, message: "Something went wrong!", Records: [], error: mainErr })
+          }
+        })
+      } else {
+        return res.status(200).json({ status: false, message: "Should have at least one unit!", Records: [], error: null })
+      }
     }
   }
 }
