@@ -2,6 +2,7 @@ let UploadRoutes = require("@/routes/UploadRoutes")
 let UserRoutes = require("@/routes/UserRoutes");
 let CakeRoutes = require("@/routes/CakeRoutes");
 let RoleRoutes = require("@/routes/RoleRoutes")
+let UnitRoutes = require("@/routes/UnitRoutes")
 let TestController = require("@/controller/test")
 
 module.exports = (app) => {
@@ -14,6 +15,9 @@ module.exports = (app) => {
   //Admin Level APIS
   app.use("/admin/role", RoleRoutes);
   // app.use("/admin/user", UserRoutes)
+
+  //Unit master routes
+  app.use("/admin/unit", UnitRoutes);
 
   //App Level APIS
   app.use("/app/user", UserRoutes)
