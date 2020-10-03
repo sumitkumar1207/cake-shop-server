@@ -161,8 +161,8 @@ module.exports.GetUnitByUnitId = async function (req, res) {
       un.unit_created_date,
       un.unit_modified_date,
       un.unit_is_active,
-      DATE_FORMAT(un.unit_created_at,'%d/%m/%Y') AS createdAt,
-      TIME_FORMAT(un.unit_created_at,'%h:%i %p') AS createdTime
+      DATE_FORMAT(un.unit_created_date,'%d/%m/%Y') AS createdAt,
+      TIME_FORMAT(un.unit_created_date,'%h:%i %p') AS createdTime
       FROM unit un
       WHERE un.unit_id='${unit_id}' AND un.unit_is_active='Y'`
 
@@ -208,8 +208,8 @@ module.exports.UpdateUnit = async function (req, res) {
       un.unit_created_date,
       un.unit_modified_date,
       un.unit_is_active,
-      DATE_FORMAT(un.unit_created_at,'%d/%m/%Y') AS createdAt,
-      TIME_FORMAT(un.unit_created_at,'%h:%i %p') AS createdTime
+      DATE_FORMAT(un.unit_created_date,'%d/%m/%Y') AS createdAt,
+      TIME_FORMAT(un.unit_created_date,'%h:%i %p') AS createdTime
       FROM unit un
       WHERE un.unit_id='${unit_id}' AND un.unit_is_active='Y'`
 
