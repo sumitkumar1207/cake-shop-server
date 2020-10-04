@@ -1,6 +1,7 @@
 let UploadRoutes = require("@/routes/UploadRoutes")
 let UserRoutes = require("@/routes/UserRoutes");
 let CakeRoutes = require("@/routes/CakeRoutes");
+let OrderRoutes = require("@/routes/OrderRoutes");
 let RoleRoutes = require("@/routes/RoleRoutes")
 let UnitRoutes = require("@/routes/UnitRoutes")
 let TestController = require("@/controller/test")
@@ -23,4 +24,6 @@ module.exports = (app) => {
   app.use("/app/user", UserRoutes)
   //Cake routes for app
   app.use("/app/cake", CakeRoutes)
+  //Order routes(When user place order).
+  app.use("/app/order", OrderRoutes)
 };
