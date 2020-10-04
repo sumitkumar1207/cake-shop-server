@@ -20,12 +20,13 @@ module.exports.AddCake = function (req, res) {
       return res.status(200).json({ status: false, message: message[0].msg, errors: errors.array(), Records: [] });
     } else {
       //Pull all the keys from body
-      let { cake_name, cake_description, cake_price, cake_image } = req.body;
+      let { cake_name, cake_description, cake_price, cake_image, unit_id } = req.body;
       //Remove white spaces and replace with single space
       cake_name = cake_name.replace(/  +/g, ' ');
       cake_description = cake_description.replace(/  +/g, ' ');
 
       let cake_payload = {
+        unit_id,
         cake_name,
         cake_description,
         cake_price,
@@ -98,6 +99,7 @@ module.exports.GetCakes = async function (req, res) {
       let find_query = `
       SELECT 
       ck.cake_id,
+      ck.unit_id,
       ck.cake_name,
       ck.cake_description,
       ck.cake_price,
@@ -107,8 +109,12 @@ module.exports.GetCakes = async function (req, res) {
       ck.cake_is_active,
       CONCAT('${req.app.config.host_name}',ck.cake_image ) AS cake_url,
       DATE_FORMAT(ck.cake_created_at,'%d/%m/%Y') AS createdAt,
-      TIME_FORMAT(ck.cake_created_at,'%h:%i %p') AS createdTime
+      TIME_FORMAT(ck.cake_created_at,'%h:%i %p') AS createdTime,
+      un.unit_name,
+      un.unit_value,
+      CONCAT( CAST(CAST(un.unit_value AS decimal(18,5)) AS float), unit_name) AS display_unit
       FROM cake ck
+      LEFT JOIN unit un ON un.unit_id=ck.unit_id
       WHERE ck.cake_is_active='Y' ORDER BY ck.cake_id DESC ${paginate}`
 
       //Query to DB
@@ -144,6 +150,7 @@ module.exports.GetCakeByCakeId = async function (req, res) {
       let find_query = `
       SELECT 
       ck.cake_id,
+      ck.unit_id,
       ck.cake_name,
       ck.cake_description,
       ck.cake_price,
@@ -153,8 +160,12 @@ module.exports.GetCakeByCakeId = async function (req, res) {
       ck.cake_is_active,
       CONCAT('${req.app.config.host_name}',ck.cake_image ) AS cake_url,
       DATE_FORMAT(ck.cake_created_at,'%d/%m/%Y') AS createdAt,
-      TIME_FORMAT(ck.cake_created_at,'%h:%i %p') AS createdTime
+      TIME_FORMAT(ck.cake_created_at,'%h:%i %p') AS createdTime,
+      un.unit_name,
+      un.unit_value,
+      CONCAT( CAST(CAST(un.unit_value AS decimal(18,5)) AS float), unit_name) AS display_unit
       FROM cake ck
+      LEFT JOIN unit un ON un.unit_id=ck.unit_id
       WHERE ck.cake_id='${cake_id}' AND ck.cake_is_active='Y'`
 
       //Query to DB
@@ -185,7 +196,7 @@ module.exports.UpdateCake = async function (req, res) {
     return res.status(403).json({ status: req.user_info.status, message: req.user_info.message, error: req.user_info.message, Records: [] });
   } else {
     let { cake_id } = req.params;
-    let { cake_name, cake_description, cake_price } = req.body;
+    let { cake_name, cake_description, cake_price, unit_id } = req.body;
     //Remove white spaces and replace with single space
     cake_name = cake_name.replace(/  +/g, ' ');
     cake_description = cake_description.replace(/  +/g, ' ');
@@ -195,6 +206,7 @@ module.exports.UpdateCake = async function (req, res) {
       let find_query = `
       SELECT 
       ck.cake_id,
+      ck.unit_id,
       ck.cake_name,
       ck.cake_description,
       ck.cake_image,
@@ -214,6 +226,7 @@ module.exports.UpdateCake = async function (req, res) {
         } else if (cake && cake.length > 0) {
 
           let update_payload = {
+            unit_id: parseInt(unit_id) > 0 ? unit_id : cake[0]["unit_id"],
             cake_name: cake_name.trim().length > 0 ? cake_name : cake[0]["cake_name"],
             cake_description: cake_description.trim().length > 0 ? cake_description : cake[0]["cake_description"],
             cake_price: cake_price || cake[0]["cake_price"],
